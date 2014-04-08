@@ -124,6 +124,8 @@ static const int kBadgeRightMargin = 10;
 
     BOOL _useSmartCursorColor;
 
+    BOOL _doCommandBySelectorCalled;
+
     // geometry
     double _lineHeight;
     double _charWidth;
@@ -2203,6 +2205,8 @@ NSMutableArray* screens=0;
         _inputMethodIsInserting = NO;
         DLog(@"PTYTextView keyDown send to IME");
 
+        _doCommandBySelectorCalled = NO;
+
         // In issue 2743, it is revealed that in OS 10.9 this sometimes calls -insertText on the
         // wrong instnace of PTYTextView. We work around the issue by using a global variable to
         // track the instance of PTYTextView that is currently handling a key event and rerouting
@@ -2214,6 +2218,7 @@ NSMutableArray* screens=0;
         // If the IME didn't want it, pass it on to the delegate
         if (!prev &&
             !_inputMethodIsInserting &&
+            _doCommandBySelectorCalled &&
             ![self hasMarkedText]) {
             DLog(@"PTYTextView keyDown IME no, send to delegate");
             [delegate keyDown:event];
@@ -4779,6 +4784,7 @@ static double EuclideanDistance(NSPoint p1, NSPoint p2) {
 - (void)doCommandBySelector:(SEL)aSelector
 {
     DLog(@"doCommandBySelector:%@", NSStringFromSelector(aSelector));
+    _doCommandBySelectorCalled = YES;
     if (gCurrentKeyEventTextView && self != gCurrentKeyEventTextView) {
         // See comment in -keyDown:
         DLog(@"Rerouting doCommandBySelector from %@ to %@", self, gCurrentKeyEventTextView);
